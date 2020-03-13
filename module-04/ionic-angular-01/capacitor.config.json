@@ -1,0 +1,8 @@
+{
+  "appId": "com.giorgiodots.ionic.course.1",
+  "appName": "ionic-angular-01",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www",
+  "cordova": {}
+}
