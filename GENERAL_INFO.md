@@ -30,4 +30,6 @@ They would need to be changed to `class="ion-text-center"`, `class="ion-text-lef
 Pick one
 
 ## Prepare project for android emulation
+`ng build`
+
 `ionic capacitor run android`
