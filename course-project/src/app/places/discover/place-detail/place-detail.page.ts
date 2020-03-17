@@ -20,7 +20,7 @@ export class PlaceDetailPage implements OnInit {
     private placesService: PlacesService,
     private modalCtrl: ModalController,
     private actionSheetCtrl: ActionSheetController
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.route.paramMap.subscribe(paramMap => {
@@ -57,28 +57,29 @@ export class PlaceDetailPage implements OnInit {
         }
       ]
     })
-    .then(actionSheetEl => {
-      actionSheetEl.present();
-    })
+      .then(actionSheetEl => {
+        actionSheetEl.present();
+      })
   }
 
-  openBookingModal(mode: 'select' | 'random'){
+  openBookingModal(mode: 'select' | 'random') {
     console.log(mode);
     this.modalCtrl.create({
       component: CreateBookingComponent,
       componentProps: {
-        selectedPlace: this.place
+        selectedPlace: this.place,
+        selectedMode: mode
       }
     })
-    .then(modalEl => {
-      modalEl.present();
-      return modalEl.onDidDismiss()
-    })
-    .then(resultData => {
-      console.log(resultData.data, resultData.role);
-      if(resultData.role === 'confirm'){
-        console.log("BOOKED!");
-      }
-    });
+      .then(modalEl => {
+        modalEl.present();
+        return modalEl.onDidDismiss()
+      })
+      .then(resultData => {
+        console.log(resultData.data, resultData.role);
+        if (resultData.role === 'confirm') {
+          console.log("BOOKED!");
+        }
+      });
   }
 }
