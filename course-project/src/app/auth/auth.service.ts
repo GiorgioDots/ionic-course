@@ -5,9 +5,9 @@ import { Injectable } from '@angular/core';
 })
 export class AuthService {
   private _userIsAuthenticated = true;
-  private _userId = "asdf";
+  private _userId = 'asdf';
 
-  constructor() { }
+  constructor() {}
 
   get userId() {
     return this._userId;
@@ -24,5 +24,4 @@ export class AuthService {
   logout() {
     this._userIsAuthenticated = false;
   }
-
 }
