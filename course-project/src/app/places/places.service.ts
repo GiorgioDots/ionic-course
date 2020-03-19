@@ -113,19 +113,29 @@ export class PlacesService {
       );
   }
 
+  uploadImage(image: File) {
+    const uploadData = new FormData();
+    uploadData.append('image', image);
+    return this.http.post<{ imageUrl: string; imagePath: string }>(
+      'https://us-central1-ioniccourse-141aa.cloudfunctions.net/storeImage',
+      uploadData
+    );
+  }
+
   addPlace(
     title: string,
     description: string,
     price: number,
     dateFrom: Date,
-    dateTo: Date
+    dateTo: Date,
+    imageUrl: string
   ) {
     let generatedId: string;
     const newPlace = new Place(
       Math.random().toString(),
       title,
       description,
-      'https://blog.realestatediscount.it/wp-content/uploads/2018/10/comprare-una-casa-in-montagna-768x510.jpg',
+      imageUrl,
       price,
       dateFrom,
       dateTo,
