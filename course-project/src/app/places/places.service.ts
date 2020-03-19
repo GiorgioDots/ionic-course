@@ -61,64 +61,74 @@ export class PlacesService {
   }
 
   fetchPlaces() {
-    return this.http
-      .get<{ [key: string]: PlaceData }>(
-        'https://ioniccourse-141aa.firebaseio.com/offered-places.json'
-      )
-      .pipe(
-        map(resData => {
-          const places = [];
-          for (const key in resData) {
-            if (resData.hasOwnProperty(key)) {
-              places.push(
-                new Place(
-                  key,
-                  resData[key].title,
-                  resData[key].description,
-                  resData[key].imageUrl,
-                  resData[key].price,
-                  new Date(resData[key].availableFrom),
-                  new Date(resData[key].availableTo),
-                  resData[key].userId
-                )
-              );
-            }
+    return this.authService.token.pipe(
+      take(1),
+      switchMap(token => {
+        return this.http.get<{ [key: string]: PlaceData }>(
+          `https://ioniccourse-141aa.firebaseio.com/offered-places.json?auth=${token}`
+        );
+      }),
+      map(resData => {
+        const places = [];
+        for (const key in resData) {
+          if (resData.hasOwnProperty(key)) {
+            places.push(
+              new Place(
+                key,
+                resData[key].title,
+                resData[key].description,
+                resData[key].imageUrl,
+                resData[key].price,
+                new Date(resData[key].availableFrom),
+                new Date(resData[key].availableTo),
+                resData[key].userId
+              )
+            );
           }
-          return places;
-        }),
-        tap(places => {
-          this._places.next(places);
-        })
-      );
+        }
+        return places;
+      }),
+      tap(places => {
+        this._places.next(places);
+      })
+    );
   }
 
   getPlace(id: string) {
-    return this.http
-      .get<PlaceData>(
-        `https://ioniccourse-141aa.firebaseio.com/offered-places/${id}.json`
-      )
-      .pipe(
-        map(resData => {
-          return new Place(
-            id,
-            resData.title,
-            resData.description,
-            resData.imageUrl,
-            resData.price,
-            new Date(resData.availableFrom),
-            new Date(resData.availableTo),
-            resData.userId
-          );
-        })
-      );
+    return this.authService.token.pipe(
+      take(1),
+      switchMap(token => {
+        return this.http.get<PlaceData>(
+          `https://ioniccourse-141aa.firebaseio.com/offered-places/${id}.json?auth=${token}`
+        );
+      }),
+      map(resData => {
+        return new Place(
+          id,
+          resData.title,
+          resData.description,
+          resData.imageUrl,
+          resData.price,
+          new Date(resData.availableFrom),
+          new Date(resData.availableTo),
+          resData.userId
+        );
+      })
+    );
   }
 
   uploadImage(image: File) {
     const uploadData = new FormData();
     uploadData.append('image', image);
-    return this.http.post<{ imageUrl: string; imagePath: string }>(
-      'https://us-central1-ioniccourse-141aa.cloudfunctions.net/storeImage',
-      uploadData
+    return this.authService.token.pipe(
+      take(1),
+      switchMap(token => {
+        return this.http.post<{ imageUrl: string; imagePath: string }>(
+          'https://us-central1-ioniccourse-141aa.cloudfunctions.net/storeImage',
+          uploadData,
+          { headers: { Authorization: 'Bearer ' + token } }
+        );
+      })
     );
   }
 
@@ -131,35 +141,47 @@ export class PlacesService {
     imageUrl: string
   ) {
     let generatedId: string;
-    const newPlace = new Place(
-      Math.random().toString(),
-      title,
-      description,
-      imageUrl,
-      price,
-      dateFrom,
-      dateTo,
-      this.authService.userId
-    );
-    return this.http
-      .post<{ name: string }>(
-        'https://ioniccourse-141aa.firebaseio.com/offered-places.json',
-        {
-          ...newPlace,
-          id: null
+    let newPlace: Place;
+    let userId: string;
+    return this.authService.userId.pipe(
+      take(1),
+      switchMap(userId => {
+        userId = userId;
+        return this.authService.token;
+      }),
+      take(1),
+      switchMap(token => {
+        if (!userId) {
+          throw new Error('User id not found');
         }
-      )
-      .pipe(
-        switchMap(resData => {
-          generatedId = resData.name;
-          return this.places;
-        }),
-        take(1),
-        tap(places => {
-          newPlace.id = generatedId;
-          this._places.next(places.concat(newPlace));
-        })
-      );
+        newPlace = new Place(
+          Math.random().toString(),
+          title,
+          description,
+          imageUrl,
+          price,
+          dateFrom,
+          dateTo,
+          userId
+        );
+        return this.http.post<{ name: string }>(
+          `https://ioniccourse-141aa.firebaseio.com/offered-places.json?auth=${token}`,
+          {
+            ...newPlace,
+            id: null
+          }
+        );
+      }),
+      switchMap(resData => {
+        generatedId = resData.name;
+        return this.places;
+      }),
+      take(1),
+      tap(places => {
+        newPlace.id = generatedId;
+        this._places.next(places.concat(newPlace));
+      })
+    );
     // return this.places.pipe(
     //   take(1),
     //   delay(1000),
@@ -171,7 +193,12 @@ export class PlacesService {
 
   updatePlace(placeId: string, title: string, description: string) {
     let updatedPlaces: Place[];
-    return this.places.pipe(
+    let token: string;
+    return this.authService.token.pipe(
+      take(1),
+      switchMap(token => {
+        return this.places;
+      }),
       take(1),
       switchMap(places => {
         if (!places || places.length <= 0) {
@@ -197,7 +224,7 @@ export class PlacesService {
           oldPlace.userId
         );
         return this.http.put(
-          `https://ioniccourse-141aa.firebaseio.com/offered-places/${placeId}.json`,
+          `https://ioniccourse-141aa.firebaseio.com/offered-places/${placeId}.json?auth=${token}`,
           { ...updatedPlaces[updatedPlaceIndex], id: null }
         );
       }),

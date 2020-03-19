@@ -6,6 +6,7 @@ import { SegmentChangeEventDetail } from '@ionic/core';
 import { Place } from '../place.model';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-discover',
@@ -47,10 +48,11 @@ export class DiscoverPage implements OnInit, OnDestroy {
   }
 
   onFilterUpdate(filter: string) {
-    const isShown = place =>
-      filter === 'all' || place.userId !== this.authService.userId;
-    this.relevantPlaces = this.loadedPlaces.filter(isShown);
-    this.filter = filter;
+    this.authService.userId.pipe(take(1)).subscribe(userId => {
+      const isShown = place => filter === 'all' || place.userId !== userId;
+      this.relevantPlaces = this.loadedPlaces.filter(isShown);
+      this.filter = filter;
+    });
   }
   // onOpenMenu(){
   //   this.menuCtrl.toggle();

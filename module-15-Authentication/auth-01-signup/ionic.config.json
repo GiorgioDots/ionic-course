@@ -1,0 +1,7 @@
+{
+  "name": "YOUR_FIREBASE_PROJECT_ID",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
